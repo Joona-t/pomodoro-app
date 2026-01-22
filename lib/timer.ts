@@ -44,6 +44,7 @@ export function createPomodoroTimer(initialSettings: TimerSettings): PomodoroTim
   let remaining = settings.durations[currentMode];
   let isRunning = false;
   let sessionStartTime: number | null = null; // timestamp when session started/resumed
+  let remainingAtStart = remaining; // seconds remaining at the moment we started/resumed
   let completedFocusSessions = 0;
 
   const state: PomodoroState = {
@@ -65,23 +66,27 @@ export function createPomodoroTimer(initialSettings: TimerSettings): PomodoroTim
     if (isRunning) return;
     isRunning = true;
     sessionStartTime = Date.now();
+    remainingAtStart = remaining; // <-- key line: resume uses current remaining
   }
+  
 
   function pause() {
     if (!isRunning) return;
-    isRunning = false;
     if (sessionStartTime !== null) {
       const now = Date.now();
       const elapsed = Math.floor((now - sessionStartTime) / 1000);
-      remaining = Math.max(0, remaining - elapsed);
+      remaining = Math.max(0, remainingAtStart - elapsed);
     }
+    isRunning = false;
     sessionStartTime = null;
   }
+  
 
   function reset(mode: PomodoroMode = currentMode) {
     isRunning = false;
     currentMode = mode;
     remaining = settings.durations[currentMode];
+    remainingAtStart = remaining;
     sessionStartTime = null;
   }
 
@@ -89,6 +94,7 @@ export function createPomodoroTimer(initialSettings: TimerSettings): PomodoroTim
     // manual switch resets session count for focus sessions
     currentMode = mode;
     remaining = settings.durations[currentMode];
+    remainingAtStart = remaining;
     isRunning = false;
     sessionStartTime = null;
   }
@@ -98,6 +104,7 @@ export function createPomodoroTimer(initialSettings: TimerSettings): PomodoroTim
     // update remaining time if current mode duration changed and timer not running
     if (!isRunning) {
       remaining = settings.durations[currentMode];
+      remainingAtStart = remaining;
     }
   }
 
@@ -114,9 +121,10 @@ export function createPomodoroTimer(initialSettings: TimerSettings): PomodoroTim
     const currentTime = now ?? Date.now();
     if (sessionStartTime === null) {
       sessionStartTime = currentTime;
+      remainingAtStart = remaining; // safety for weird cases
     }
     const elapsed = Math.floor((currentTime - sessionStartTime) / 1000);
-    const newRemaining = settings.durations[currentMode] - elapsed;
+    const newRemaining = remainingAtStart - elapsed;
     if (newRemaining <= 0) {
       // session completed
       remaining = 0;
@@ -151,20 +159,18 @@ export function createPomodoroTimer(initialSettings: TimerSettings): PomodoroTim
   /**
    * Manually set the timer state. This is used when restoring persisted state.
    */
-  function resumeFromState(remainingSeconds: number, mode: PomodoroMode, running: boolean, completed: number) {
+  function resumeFromState(
+    remainingSeconds: number,
+    mode: PomodoroMode,
+    running: boolean,
+    completed: number
+  ) {
     currentMode = mode;
     remaining = remainingSeconds;
+    remainingAtStart = remainingSeconds; // <-- NEW: critical
     completedFocusSessions = completed;
     isRunning = running;
-    if (running) {
-      // When resuming, set sessionStartTime so that tick() subtracts elapsed properly.
-      // We set sessionStartTime such that remaining = settings.durations[currentMode] - elapsed
-      // => elapsed = settings.durations[currentMode] - remaining
-      const elapsed = settings.durations[currentMode] - remainingSeconds;
-      sessionStartTime = Date.now() - elapsed * 1000;
-    } else {
-      sessionStartTime = null;
-    }
+    sessionStartTime = running ? Date.now() : null; // <-- start counting from now
   }
 
   return {

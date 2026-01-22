@@ -26,7 +26,7 @@ export default function SessionLog() {
   }
 
   return (
-    <div className="bg-surface-muted p-4 rounded-lg shadow flex flex-col gap-4">
+    <div className="pink-panel p-4 rounded-lg shadow flex flex-col gap-4">
       <h3 className="text-lg font-semibold">Session Log</h3>
       <div className="text-sm text-gray-700 flex flex-col gap-1">
         <span>Today: {focusMinutes.toFixed(1)} min focus ({focusSessions} sessions), {breakMinutes.toFixed(1)} min break</span>

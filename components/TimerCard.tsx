@@ -75,7 +75,7 @@ export default function TimerCard() {
   };
 
   return (
-    <div className="bg-surface-muted p-6 rounded-lg shadow flex flex-col items-center gap-4">
+    <div className="pink-panel p-6 flex flex-col items-center gap-4">
       <h2 className="text-xl font-semibold capitalize">
         {mode === 'focus'
           ? 'Focus'
