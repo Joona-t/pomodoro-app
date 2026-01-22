@@ -1,6 +1,6 @@
-# Pomodoro Timer Web App
+# Pomodoro Timer Web App (WIP)
 
-This repository contains a **production‑ready Pomodoro timer** built with **Next.js (App Router)** and **TypeScript**.  The application provides a clean, mobile‑friendly user experience with persistent local state, task management and session logging.  The codebase is modular and ready to be extended with a backend API in the future.
+This repository contains a **Work in Progress Pomodoro timer** built with **Next.js (App Router)** and **TypeScript**.  The application provides a clean, mobile‑friendly user experience with persistent local state, task management and session logging.  The codebase is modular and ready to be extended with a backend API in the future.
 
 ## Features
 
