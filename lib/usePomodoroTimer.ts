@@ -47,6 +47,8 @@ export interface UsePomodoroTimerReturn {
 
   /** Skip current break and go back to focus. */
   skip: () => void;
+  /** Complete current session and advance to next mode. */
+  complete: () => void;
 }
 
 export function usePomodoroTimer(): UsePomodoroTimerReturn {
@@ -77,18 +79,28 @@ export function usePomodoroTimer(): UsePomodoroTimerReturn {
   // Listen to timer and update state regularly
   useEffect(() => {
     const interval = setInterval(() => {
+      const completedMode = timerRef.current.state.mode;
       const completed = timerRef.current.tick();
+  
+      console.log('TICK', {
+        remaining: timerRef.current.state.remaining,
+        completed,
+        mode: timerRef.current.state.mode,
+        isRunning: timerRef.current.state.isRunning,
+      });
+  
       if (completed) {
-        handleSessionComplete(timerRef.current.state.mode === 'focus');
+        console.log('SESSION COMPLETED');
+        handleSessionComplete(completedMode);
       }
-      // Persist timer state
+  
       updatePersistedTimerState();
-      // Force re-render by updating a dummy state
       setTimerVersion((v) => v + 1);
     }, 1000);
+  
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updatePersistedTimerState]);
+  
 
   // On mount, restore persisted timer state if present
   useEffect(() => {
@@ -111,10 +123,10 @@ export function usePomodoroTimer(): UsePomodoroTimerReturn {
 
   // handle session complete
   const handleSessionComplete = useCallback(
-    (wasFocus: boolean) => {
+    (completedMode: PomodoroMode) => {
+      const wasFocus = completedMode === 'focus';
       const now = Date.now();
-      const { mode } = timerRef.current.state;
-      const duration = state.timerSettings.durations[mode];
+      const duration = state.timerSettings.durations[completedMode];
       // Play sound/notification at session end
       if (state.timerSettings.soundEnabled) {
         try {
@@ -132,8 +144,8 @@ export function usePomodoroTimer(): UsePomodoroTimerReturn {
       }
       if (state.timerSettings.notificationsEnabled && typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
-          const title = mode === 'focus' ? 'Focus session complete!' : 'Break complete!';
-          const body = mode === 'focus' ? 'Take a break.' : 'Back to focus.';
+          const title = completedMode === 'focus' ? 'Focus session complete!' : 'Break complete!';
+          const body = completedMode === 'focus' ? 'Take a break.' : 'Back to focus.';
           new Notification(title, { body });
         }
       }
@@ -150,7 +162,7 @@ export function usePomodoroTimer(): UsePomodoroTimerReturn {
         const newLog: SessionLogEntry = {
           id: generateId(),
           timestamp: now,
-          mode,
+          mode: completedMode,
           duration,
           taskId: wasFocus ? prev.activeTaskId : undefined,
           taskTitle: wasFocus
@@ -330,6 +342,15 @@ export function usePomodoroTimer(): UsePomodoroTimerReturn {
     }
   }, [updatePersistedTimerState]);
 
+  const complete = useCallback(() => {
+    const completedMode = timerRef.current.state.mode;
+    handleSessionComplete(completedMode);
+    const nextMode = completedMode === 'focus' ? 'short_break' : 'focus';
+    timerRef.current.switchMode(nextMode);
+    updatePersistedTimerState();
+    setTimerVersion((v) => v + 1);
+  }, [handleSessionComplete, updatePersistedTimerState]);
+
   return {
     mode: timerRef.current.state.mode,
     remaining: timerRef.current.state.remaining,
@@ -351,5 +372,6 @@ export function usePomodoroTimer(): UsePomodoroTimerReturn {
     clearTodayLogs,
     clearAllLogs,
     skip,
+    complete,
   };
 }

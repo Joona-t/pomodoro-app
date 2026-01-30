@@ -24,6 +24,7 @@ export default function TimerCard() {
     switchMode,
     updateSettings,
     skip,
+    complete,
   } = usePomodoroTimer();
 
   // Format seconds to mm:ss
@@ -36,6 +37,17 @@ export default function TimerCard() {
   // Keyboard shortcuts
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+
+  if (
+    target &&
+    (target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.tagName === "SELECT" ||
+      target.isContentEditable)
+  ) {
+    return;
+  }
       switch (e.code) {
         case 'Space':
           e.preventDefault();
@@ -75,14 +87,18 @@ export default function TimerCard() {
   };
 
   return (
-    <div className="pink-panel p-6 flex flex-col items-center gap-4">
-      <h2 className="text-xl font-semibold capitalize">
-        {mode === 'focus'
-          ? 'Focus'
-          : mode === 'short_break'
-          ? 'Short Break'
-          : 'Long Break'}
-      </h2>
+    <div className="relative">
+      <div className="focus-glow" />
+  
+      <div className="pink-panel p-6 flex flex-col items-center gap-4 relative z-10">
+        <h2 className="text-5xl font-semibold capitalize">
+          {mode === 'focus'
+            ? 'Focus'
+            : mode === 'short_break'
+            ? 'Short Break'
+            : 'Long Break'}
+        </h2>
+  
       <div className="text-6xl font-mono tabular-nums">
         {formatTime(remaining)}
       </div>
@@ -98,6 +114,12 @@ export default function TimerCard() {
           onClick={reset}
         >
           Reset
+        </button>
+        <button
+          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded focus:outline-none focus:ring focus:ring-pink-500"
+          onClick={complete}
+        >
+          Skip
         </button>
         { (mode === 'short_break' || mode === 'long_break') && (
           <button
@@ -142,48 +164,12 @@ export default function TimerCard() {
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-4 mt-4">
-        <label className="flex items-center gap-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={settings.autoAdvance}
-            onChange={(e) => updateSettings({ autoAdvance: e.target.checked })}
-            className="h-4 w-4"
-          />
-          Auto-advance
-        </label>
-        <label className="flex items-center gap-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={settings.longBreakInterval > 0}
-            onChange={(e) =>
-              updateSettings({ longBreakInterval: e.target.checked ? 4 : 0 })
-            }
-            className="h-4 w-4"
-          />
-          Long break every 4
-        </label>
-        <label className="flex items-center gap-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={settings.soundEnabled}
-            onChange={(e) => updateSettings({ soundEnabled: e.target.checked })}
-            className="h-4 w-4"
-          />
-          Sound
-        </label>
-        <label className="flex items-center gap-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={settings.notificationsEnabled}
-            onChange={(e) => updateSettings({ notificationsEnabled: e.target.checked })}
-            className="h-4 w-4"
-          />
-          Notifications
-        </label>
+       {/* controls temporarily removed */}
       </div>
     </div>
   );
+
+    
 }
 
 interface ModeButtonProps {
