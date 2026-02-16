@@ -115,20 +115,21 @@ export default function TimerCard() {
         >
           Reset
         </button>
-        <button
-          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded focus:outline-none focus:ring focus:ring-pink-500"
-          onClick={complete}
-        >
-          Skip
-        </button>
-        { (mode === 'short_break' || mode === 'long_break') && (
+        {mode === 'focus' ? (
           <button
-            className="px-4 py-2 bg-gray-300 rounded focus:outline-none focus:ring"
+            className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded focus:outline-none focus:ring focus:ring-pink-500"
+            onClick={complete}
+          >
+            Skip
+          </button>
+        ) : (
+          <button
+            className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded focus:outline-none focus:ring focus:ring-pink-500"
             onClick={skip}
           >
             Skip
           </button>
-        ) }
+        )}
       </div>
       <div className="flex gap-2 mt-4">
         <ModeButton

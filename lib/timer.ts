@@ -134,21 +134,23 @@ export function createPomodoroTimer(initialSettings: TimerSettings): PomodoroTim
       if (currentMode === 'focus') {
         completedFocusSessions += 1;
       }
-      // determine next mode
-      let nextMode: PomodoroMode = currentMode;
-      if (settings.autoAdvance) {
-        if (currentMode === 'focus') {
-          // decide break type
-          if (settings.longBreakInterval > 0 && completedFocusSessions % settings.longBreakInterval === 0) {
-            nextMode = 'long_break';
-          } else {
-            nextMode = 'short_break';
-          }
+      // Always determine and switch to next mode
+      let nextMode: PomodoroMode;
+      if (currentMode === 'focus') {
+        // decide break type
+        if (settings.longBreakInterval > 0 && completedFocusSessions % settings.longBreakInterval === 0) {
+          nextMode = 'long_break';
         } else {
-          // after any break, next is focus
-          nextMode = 'focus';
+          nextMode = 'short_break';
         }
-        switchMode(nextMode);
+      } else {
+        // after any break, next is focus
+        nextMode = 'focus';
+      }
+      switchMode(nextMode);
+      // If autoAdvance is enabled, automatically start the next session
+      if (settings.autoAdvance) {
+        start();
       }
       return true;
     }
